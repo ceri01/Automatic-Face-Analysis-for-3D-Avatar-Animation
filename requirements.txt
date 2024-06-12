@@ -1,5 +1,5 @@
 PyGObject~=3.48.2
-numpy~=1.26.4
+numpy~=1.23.5
 matplotlib~=3.8.4
 freenect2~=0.2.3
 PyQt5~=5.15.10
