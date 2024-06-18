@@ -1,3 +1,4 @@
+import io
 import struct
 import asyncio
 import socket
@@ -64,7 +65,7 @@ async def mainLoop():
 
 # Convert array of byte in np array, readable from py feat
 def generateNpArray(frame):
-    return np.array(Image.open(frame))
+    return np.array(Image.open(io.BytesIO(frame)))
 
 
 # Unpack received data, first 8 bytes are timestamp, other ones are frame
