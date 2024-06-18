@@ -1,6 +1,7 @@
 import struct
 import asyncio
 import socket
+import numpy as np
 from PIL import Image
 from feat import Detector
 
@@ -9,8 +10,8 @@ from feat import Detector
 detector = Detector(face_model='faceboxes', landmark_model='mobilefacenet', au_model='xgb')
 
 # socket setup
-IP = ''
-PORT = 0
+IP = '127.0.0.1'
+PORT = 8052
 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # names of aus
@@ -27,7 +28,7 @@ async def mainLoop():
         data = b''
 
         # get all data from socket
-        for i in range(0, 8100):
+        while len(data) < 8294408:
             cd = socket_client.recv(4096)
             data += cd
             print("curr pkt len ", len(cd), " TOT LEN ", len(data))
@@ -39,7 +40,7 @@ async def mainLoop():
         timestamp, frame = unpackData(data)
 
         # from np.array of byte to PIL Image
-        frame = generateImage(frame)
+        frame = generateNpArray(frame)
 
         # from BGRA to BGR, remove opacity
         frame = frame[:, :, ::-1]
@@ -47,7 +48,7 @@ async def mainLoop():
         # get aus (list of double)
         curr_aus = await detectAus(frame)
 
-        print(socket_client.send(timestamp))
+        print(curr_aus)
 
         if len(curr_aus[0]) > 0:
             # normalize aus
@@ -61,9 +62,9 @@ async def mainLoop():
         await asyncio.sleep(0.01)
 
 
-# Convert array of byte in PIL image, readable from py feat
-def generateImage(frame):
-    return Image.frombytes('RGBA', (1920, 1080), frame, 'raw', 'BGRA')
+# Convert array of byte in np array, readable from py feat
+def generateNpArray(frame):
+    return np.array(Image.open(frame))
 
 
 # Unpack received data, first 8 bytes are timestamp, other ones are frame
