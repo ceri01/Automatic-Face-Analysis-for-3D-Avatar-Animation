@@ -1,9 +1,8 @@
 import struct
 import asyncio
-from PIL import Image
-
-from feat import Detector
 import socket
+from PIL import Image
+from feat import Detector
 
 # SETUP
 # detector used to acquire faces, landmarks and AUs
@@ -47,6 +46,8 @@ async def mainLoop():
 
         # get aus (list of double)
         curr_aus = await detectAus(frame)
+
+        socket.send(timestamp)
 
         if len(curr_aus[0]) > 0:
             # normalize aus
