@@ -47,7 +47,7 @@ async def mainLoop():
         # get aus (list of double)
         curr_aus = await detectAus(frame)
 
-        socket.send(timestamp)
+        print(socket.send(timestamp))
 
         if len(curr_aus[0]) > 0:
             # normalize aus
