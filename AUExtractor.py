@@ -11,7 +11,7 @@ detector = Detector(face_model='faceboxes', landmark_model='mobilefacenet', au_m
 # socket setup
 IP = ''
 PORT = 0
-socket = socket.socket()
+socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # names of aus
 AUsNames = [
@@ -28,7 +28,7 @@ async def mainLoop():
 
         # get all data from socket
         for i in range(0, 8100):
-            cd = socket.recv(4096)
+            cd = socket_client.recv(4096)
             data += cd
             print("curr pkt len ", len(cd), " TOT LEN ", len(data))
 
@@ -47,7 +47,7 @@ async def mainLoop():
         # get aus (list of double)
         curr_aus = await detectAus(frame)
 
-        print(socket.send(timestamp))
+        print(socket_client.send(timestamp))
 
         if len(curr_aus[0]) > 0:
             # normalize aus
@@ -57,7 +57,7 @@ async def mainLoop():
             for au in range(len(aus_list)):
                 aus_list[au] = fromDoubleToFloat(aus_list[au])
 
-            socket.send(timestamp + b''.join(struct.pack('d', num) for num in aus_list))  # send to server
+            socket_client.send(timestamp + b''.join(struct.pack('d', num) for num in aus_list))  # send to server
         await asyncio.sleep(0.01)
 
 
@@ -92,5 +92,5 @@ def fromDoubleToFloat(val):
 
 
 if __name__ == "__main__":
-    socket.connect((IP, PORT))
+    socket_client.connect((IP, PORT))
     asyncio.run(mainLoop())
