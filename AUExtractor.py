@@ -1,8 +1,8 @@
-import io
 import struct
 import asyncio
 import socket
 import numpy as np
+from io import BytesIO
 from PIL import Image
 from feat import Detector
 
@@ -28,32 +28,28 @@ async def mainLoop():
         # Raw data -> first 8 bytes timestamp and other 8294400 frame bytes
         data = b''
 
+        timestamp = b'' + socket_client.recv(8)
         # get all data from socket
-        while len(data) < 8294408:
-            cd = socket_client.recv(4096)
-            data += cd
-            print("curr pkt len ", len(cd), " TOT LEN ", len(data))
+        while len(data) < 8294400:
+            data += socket_client.recv(4096)
 
-        print(data[0:15])
+        print(data)
         print("lunghezza finale: ", len(data))
 
-        # Unpack recived data
-        timestamp, frame = unpackData(data)
-
         # from np.array of byte to PIL Image
-        frame = generateNpArray(frame)
+        frame = generateNpArray(data)
 
         # from BGRA to BGR, remove opacity
         frame = frame[:, :, ::-1]
 
         # get aus (list of double)
-        curr_aus = await detectAus(frame)
+        curr_aus = (await detectAus(frame))[0][0].tolist()
 
         print(curr_aus)
 
         if len(curr_aus[0]) > 0:
             # normalize aus
-            aus_list = NormalizeData(curr_aus[0][0].tolist())
+            aus_list = NormalizeData(curr_aus)
 
             # convert AUs into
             for au in range(len(aus_list)):
@@ -65,14 +61,7 @@ async def mainLoop():
 
 # Convert array of byte in np array, readable from py feat
 def generateNpArray(frame):
-    return np.array(Image.open(io.BytesIO(frame)))
-
-
-# Unpack received data, first 8 bytes are timestamp, other ones are frame
-def unpackData(data):
-    timestamp = data[:8]
-    frame = data[8:]
-    return timestamp, frame
+    return np.array(Image.open(BytesIO(frame)))
 
 
 # detect aus with py-feat
@@ -84,8 +73,7 @@ async def detectAus(frame):
 
 # normalize data in scale 0 to 100
 def NormalizeData(data: list):
-    normalized_data = [int(val * 1000) / 10 for val in data]
-    return normalized_data
+    return [int(val * 1000) / 10 for val in data]
 
 
 # Convert Double (8 byte) into float (4 byte)
