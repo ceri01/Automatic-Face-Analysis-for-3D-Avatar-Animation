@@ -31,12 +31,13 @@ async def mainLoop():
         # get all data from socket
         try:
             while len(data) < 8294400:
-                print("acquisendo")
+                print(".", end='')
                 data += socket_client.recv(4096)
 
-            print("lunghezza finale: ", len(data))
+            print("\nlunghezza finale: ", len(data))
         except socket.timeout:
             print("timeout connessione")
+            socket_client.send(timestamp)
             continue
 
         # from np.array of byte to PIL Image
