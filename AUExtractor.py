@@ -12,6 +12,7 @@ detector = Detector(face_model='faceboxes', landmark_model='mobilefacenet', au_m
 IP = '127.0.0.1'
 PORT = 8054
 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+socket.setdefaulttimeout(3)
 
 # names of aus
 AUsNames = [
@@ -28,11 +29,15 @@ async def mainLoop():
         timestamp = b'' + socket_client.recv(8)
 
         # get all data from socket
-        while len(data) < 8294400:
-            print("acquisendo")
-            data += socket_client.recv(4096)
+        try:
+            while len(data) < 8294400:
+                print("acquisendo")
+                data += socket_client.recv(4096)
 
-        print("lunghezza finale: ", len(data))
+            print("lunghezza finale: ", len(data))
+        except socket.timeout:
+            print("timeout connessione")
+            continue
 
         # from np.array of byte to PIL Image
         frame = generateNpArray(data)
