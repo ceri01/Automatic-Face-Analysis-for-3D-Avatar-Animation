@@ -59,6 +59,9 @@ async def mainLoop():
             print(aus_list)
 
             socket_client.send(timestamp + b''.join(struct.pack('d', num) for num in aus_list))  # send to server
+        else:
+            socket_client.send(timestamp)
+
         await asyncio.sleep(0.01)
 
 
