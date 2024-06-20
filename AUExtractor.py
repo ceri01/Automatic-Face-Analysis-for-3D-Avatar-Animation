@@ -32,7 +32,10 @@ async def mainLoop():
         try:
             while len(data) < 8294400:
                 print(".", end='')
-                data += socket_client.recv(4096)
+                rec = socket_client.recv(1024)
+                data += rec
+                if len(rec) <= 0:
+                    break
 
             print("\nlunghezza finale: ", len(data))
         except socket.timeout:
@@ -78,7 +81,7 @@ def NormalizeData(data: list):
 
 # Convert Double (8 byte) into float (4 byte)
 def fromDoubleToFloat(val):
-    return struct.pack('>f', struct.unpack('>d', val)[0])
+    return struct.pack('<f', struct.unpack('<d', val)[0])
 
 
 if __name__ == "__main__":
