@@ -57,8 +57,11 @@ async def mainLoop():
             aus_list = NormalizeData(curr_aus[0][0].tolist())
 
             print(aus_list)
+            ausInByte = b''
+            for aus in aus_list:
+                ausInByte += fromIntTobyte(aus)
 
-            socket_client.send(timestamp + b''.join(struct.pack('d', num) for num in aus_list))  # send to server
+            socket_client.send(timestamp + ausInByte)  # send to server
         else:
             socket_client.send(timestamp)
 
@@ -83,7 +86,7 @@ def NormalizeData(data: list):
 
 
 # Convert Double (8 byte) into float (4 byte)
-def fromDoubleToFloat(val):
+def fromIntTobyte(val):
     return struct.pack('<f', struct.unpack('<d', val)[0])
 
 
