@@ -59,7 +59,7 @@ async def mainLoop():
             print(aus_list)
             ausInByte = b''
             for aus in aus_list:
-                ausInByte += fromIntTobyte(aus)
+                ausInByte += fromIntToByte(aus)
 
             socket_client.send(timestamp + ausInByte)  # send to server
         else:
@@ -86,8 +86,9 @@ def NormalizeData(data: list):
 
 
 # Convert Double (8 byte) into float (4 byte)
-def fromIntTobyte(val):
-    return struct.pack('<f', struct.unpack('<d', val)[0])
+def fromIntToByte(val):
+    byte_length = (val.bit_length() + 7) // 8 or 1
+    return val.to_bytes(byte_length, byteorder='little')
 
 
 if __name__ == "__main__":
