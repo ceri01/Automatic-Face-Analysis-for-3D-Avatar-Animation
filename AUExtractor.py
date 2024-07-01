@@ -31,12 +31,15 @@ async def mainLoop():
         # get all data from socket
         try:
             while len(data) < 8294400:
+                print(".", end='')
                 rec = socket_client.recv(4096)
                 data += rec
                 if len(rec) <= 0:
                     break
 
+            print("\nlunghezza finale: ", len(data))
         except socket.timeout:
+            print("timeout connessione")
             socket_client.send(timestamp)
             continue
 
@@ -55,6 +58,7 @@ async def mainLoop():
 
             ausInByte = b''
             for aus in aus_list:
+                print(aus)
                 ausInByte += struct.pack('I', aus)
 
             socket_client.send(timestamp + ausInByte)  # send to server
