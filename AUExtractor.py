@@ -10,7 +10,7 @@ detector = Detector(face_model='faceboxes', landmark_model='mobilefacenet', au_m
 
 # socket setup
 IP = '127.0.0.1'
-PORT = 8054
+PORT = 8053
 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket.setdefaulttimeout(3)
 
@@ -31,15 +31,12 @@ async def mainLoop():
         # get all data from socket
         try:
             while len(data) < 8294400:
-                print(".", end='')
-                rec = socket_client.recv(1024)
+                rec = socket_client.recv(4096)
                 data += rec
                 if len(rec) <= 0:
                     break
 
-            print("\nlunghezza finale: ", len(data))
         except socket.timeout:
-            print("timeout connessione")
             socket_client.send(timestamp)
             continue
 
@@ -56,15 +53,13 @@ async def mainLoop():
             # normalize aus
             aus_list = NormalizeData(curr_aus[0][0].tolist())
 
-            print(aus_list)
             ausInByte = b''
             for aus in aus_list:
-                ausInByte += fromIntToByte(aus)
+                ausInByte += struct.pack('I', aus)
 
             socket_client.send(timestamp + ausInByte)  # send to server
         else:
             socket_client.send(timestamp)
-
         await asyncio.sleep(0.01)
 
 
@@ -83,12 +78,6 @@ async def detectAus(frame):
 # normalize data in scale 0 to 100
 def NormalizeData(data: list):
     return [int(val * 100) for val in data]
-
-
-# Convert Double (8 byte) into float (4 byte)
-def fromIntToByte(val):
-    byte_length = (val.bit_length() + 7) // 8 or 1
-    return val.to_bytes(byte_length, byteorder='little')
 
 
 if __name__ == "__main__":
