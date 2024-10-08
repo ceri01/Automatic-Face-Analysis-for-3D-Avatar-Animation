@@ -103,12 +103,7 @@ def formatData(data: list):
 
 
 def NormalizeData(data: list):
-    newData = []
-    minValue = np.min(data)
-    maxValue = np.max(data)
-    for d in data:
-        newData.append(((d - minValue) / (maxValue - minValue)) * 5)
-    return newData
+    return [5 * el for el in data]
 
 
 if __name__ == "__main__":
