@@ -5,11 +5,9 @@ from PIL import Image
 
 
 def catch_aus_feat(filename, detector):
-    img = Image.open(filename)
-    # Convert the PIL image into a NumPy array using numpy.array()
+    img = Image.open(filename).convert('RGB')
+    # Convert the PIL image into a NumPy array using numpy.array().reshape()
     frame = np.array(img)
-
-    frame = frame[:, :, ::-1]
 
     detected_face = detector.detect_faces(frame)
     detected_landmarks = detector.detect_landmarks(frame, detected_face)
@@ -21,9 +19,10 @@ def catch_aus_feat(filename, detector):
     if len(aus) >= 1 and len(aus[0]) >= 1:
         aus = aus[0][0].tolist()
 
+        aus[19] = 0
+        del aus[15]
         del aus[8]
-        del aus[17]
-        aus[17] = 0
+
 
         aus_list = normalize_aus(aus)
         return aus_list
