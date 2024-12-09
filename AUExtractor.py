@@ -1,6 +1,9 @@
 import struct
 import asyncio
 import socket
+import sys
+from sys import stderr
+
 import numpy as np
 from feat import Detector
 
@@ -26,7 +29,6 @@ async def main_loop():
     while True:
         # Raw data -> first 8 bytes timestamp and other 8294400 frame bytes
         data = b''
-        timestamp = b'' + socket_client.recv(8)
 
         # get all data from socket
         try:
@@ -37,7 +39,7 @@ async def main_loop():
                     break
 
         except socket.timeout:
-            socket_client.send(timestamp)
+            sys.stderr("Socket timeout error!")
             continue
 
         try:
@@ -58,12 +60,11 @@ async def main_loop():
                 for aus in aus_list:
                     aus_in_byte += struct.pack('I', aus)
 
-                socket_client.send(timestamp + aus_in_byte)  # send to server
-            else:
-                socket_client.send(timestamp)
+                socket_client.send(aus_in_byte)  # send to server
 
         except:
-            socket_client.send(timestamp)
+            sys.stderr("Error occurs in frame processing!")
+            continue
 
         await asyncio.sleep(0.01)
 
