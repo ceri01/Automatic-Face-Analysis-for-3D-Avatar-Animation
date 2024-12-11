@@ -1,3 +1,2 @@
 py-feat~=0.6.2
-# freenect2~=0.2.3
-# scipy==1.13.1
+freenect2 @ git+https://github.com/ceri01/freenect2-python.git@master
