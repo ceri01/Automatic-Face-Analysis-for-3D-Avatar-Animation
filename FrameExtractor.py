@@ -1,5 +1,6 @@
-from freenect2 import Device
+from freenect2 import Device, FrameType
 import socket
+
 
 IP = '127.0.0.1'
 PORT = 8053
@@ -21,14 +22,14 @@ def start_server():
             print(f"Server listen on {IP}:{PORT}...")
 
             try:
+                conn, addr = skt.accept()
                 while True:
-                    conn, addr = skt.accept()
                     with conn:
                         print(f"Request accepted")
-                        type_, frame = device.get_next_frame()
-                        # print(frame.to_array().tobytes())
-                        conn.sendall(frame.data)
-                        print(f"Frame sent")
+                        for i, (type_, frame) in enumerate(device):
+                            if FrameType.Color is type_:
+                                conn.sendall(frame.to_array()[:720, :1280, 0:3].tobytes())
+                                print(f"Frame sent")
 
             except KeyboardInterrupt:
                 print("Close from user")

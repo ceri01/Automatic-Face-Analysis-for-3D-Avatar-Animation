@@ -1,2 +1,3 @@
 py-feat~=0.6.2
 freenect2 @ git+https://github.com/ceri01/freenect2-python.git@master
+scikit-learn==1.5.2
