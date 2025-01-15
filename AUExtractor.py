@@ -1,7 +1,6 @@
 import struct
 import asyncio
 import socket
-import sys
 
 import numpy as np
 from feat import Detector
@@ -16,60 +15,51 @@ PORT = 8053
 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket.setdefaulttimeout(3)
 
-# names of aus (sent in this order)
-AUsNames = [
-    "AU1", "AU2", "AU4", "AU5", "AU6", "AU7", "AU9", "AU10",
-    "AU11", "AU12", "AU14", "AU15", "AU17", "AU20", "AU23",
-    "AU24", "AU25", "AU26", "AU28", "AU43"
-]
+IP_DEST = '' # insert ip
+PORT_DEST = 12345
+dest_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+# Constants
+NUM_AUS = 20
+H = 720
+W = 1280
+C = 3
 
 async def main_loop():
     while True:
-        flag = True
         data = b''
+        frame_size = H * W * C  # 2.764.800
+        while len(data) < frame_size:
+            rec = socket_client.recv(4096)
+            if not rec:
+                return
+            data += rec
 
-        # get all data from socket
-        try:
-            while len(data) < 2764800:
-                rec = socket_client.recv(4096)
-                data += rec
-                if len(rec) <= 0:
-                    flag = False
+        # Create np.array
+        frame = generate_np_array(data)
 
-        except socket.timeout:
-            sys.stderr("Socket timeout error!")
-            continue
+        # get aus
+        curr_aus = await detect_aus(frame)
 
-        if flag:
-            try:
-                frame = generate_np_array(data)
+        # Create list of AUS if face is detected
+        aus_in_byte = b''
+        if len(curr_aus[0]) > 0:
+            aus_list = normalize_data(curr_aus[0][0].tolist())
+        else:
+            # although create list of zeros
+            aus_list = [0]*NUM_AUS
 
-                # from BGRA to BGR, remove opacity
-                frame = frame[:, :, ::-1]
+        # Pack list of AUS (20 AUS * 4 Bytes)
+        for aus_val in aus_list:
+            aus_in_byte += struct.pack('I', aus_val)
 
-                # get aus (list of double)
-                curr_aus = await detect_aus(frame)
-
-                if len(curr_aus[0]) > 0:
-                    # normalize aus
-                    aus_list = normalize_data(curr_aus[0][0].tolist())
-
-                    aus_in_byte = b''
-                    for aus in aus_list:
-                        aus_in_byte += struct.pack('I', aus)
-
-                print(curr_aus)
-            except:
-                sys.stderr("Error occurs in frame processing!")
-                continue
-
-        await asyncio.sleep(0.5)
+        # Send AUS to client
+        dest_client.sendall(aus_in_byte)
 
 
 # Convert array of byte in np array, readable from py feat
 def generate_np_array(frame):
-    return np.frombuffer(frame, dtype='uint8').reshape((720, 1280, 3), order='C')
+    return np.frombuffer(frame, dtype='uint8').reshape((H, W, C), order='C')
 
 
 # detect aus with py-feat
@@ -93,4 +83,5 @@ def normalize_data(data: list):
 
 if __name__ == "__main__":
     socket_client.connect((IP, PORT))
+    dest_client.connect((IP_DEST, PORT_DEST))
     asyncio.run(main_loop())
